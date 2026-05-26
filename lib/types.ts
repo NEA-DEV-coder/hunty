@@ -95,10 +95,25 @@ export type LeaderboardEntry = {
   points: number
 }
 
+export type FastestPlayerEntry = {
+  address: string
+  name?: string
+  points?: number
+  completionTimeSeconds: number
+}
+
 export interface LeaderboardDisplayEntry {
   position: number
   name: string
   points: number
+  icon: ReactNode
+}
+
+export interface FastestPlayerDisplayEntry {
+  position: number
+  name: string
+  completionTimeLabel: string
+  points?: number
   icon: ReactNode
 }
 

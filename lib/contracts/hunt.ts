@@ -4,9 +4,9 @@ import { normalizeNetworkError, AnswerIncorrectError } from "./errors"
 import { SOROBAN_RPC_URL, NETWORK_PASSPHRASE } from "./config"
 import { getActiveWalletAdapter } from "@/lib/walletAdapter"
 
-import type { ClueInfo, HuntInfo, CreateHuntResult, SubmitAnswerResult, ActivateHuntResult, AddClueResult, LeaderboardEntry } from "@/lib/types"
+import type { ClueInfo, HuntInfo, CreateHuntResult, SubmitAnswerResult, ActivateHuntResult, AddClueResult, LeaderboardEntry, FastestPlayerEntry } from "@/lib/types"
 
-export type { ClueInfo, HuntInfo, CreateHuntResult, SubmitAnswerResult, ActivateHuntResult, AddClueResult, LeaderboardEntry }
+export type { ClueInfo, HuntInfo, CreateHuntResult, SubmitAnswerResult, ActivateHuntResult, AddClueResult, LeaderboardEntry, FastestPlayerEntry }
 
 // AnswerIncorrectError is re-exported from the central errors module for
 // backwards-compatible imports (e.g. `import { AnswerIncorrectError } from "@/lib/contracts/hunt"`).
@@ -191,6 +191,51 @@ export async function get_hunt_leaderboard(huntId: number): Promise<LeaderboardE
   }
 
   return mockData
+}
+
+export async function get_hunt_fastest_players(huntId: number): Promise<FastestPlayerEntry[]> {
+  const indexerUrl = process.env.NEXT_PUBLIC_TORII_INDEXER_URL
+
+  if (indexerUrl) {
+    try {
+      const response = await fetch(`${indexerUrl}/hunts/${huntId}/fastest-completions`, {
+        cache: "no-store",
+      })
+
+      if (response.ok) {
+        const body = await response.json()
+        const rows = Array.isArray(body?.data) ? body.data : Array.isArray(body?.entries) ? body.entries : []
+
+        if (rows.length > 0) {
+          return rows
+            .map((entry: any) => ({
+              address: entry.address,
+              name: entry.name,
+              points: typeof entry.points === "number" ? entry.points : undefined,
+              completionTimeSeconds:
+                typeof entry.completion_time_seconds === "number"
+                  ? entry.completion_time_seconds
+                  : typeof entry.duration_seconds === "number"
+                  ? entry.duration_seconds
+                  : Math.floor((Number(entry.completion_time_ms ?? entry.duration_ms ?? 0) / 1000) || 0),
+            }))
+            .filter((entry) => entry.address && entry.completionTimeSeconds >= 0)
+        }
+      }
+    } catch (error) {
+      console.warn("Torii indexer fetch failed:", error)
+    }
+  }
+
+  const leaderboard = await get_hunt_leaderboard(huntId)
+  const sortedByPoints = [...leaderboard].sort((a, b) => b.points - a.points)
+
+  return sortedByPoints.map((entry, index) => ({
+    address: entry.address,
+    name: entry.name,
+    points: entry.points,
+    completionTimeSeconds: 600 + index * 90,
+  }))
 }
 
 /**
