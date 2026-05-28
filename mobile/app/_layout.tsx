@@ -1,25 +1,6 @@
 import '../global.css';
-import { useCallback, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import { Stack, type ErrorBoundaryProps, useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { useFonts } from "expo-font";
-
-import {
-  hideSplashScreen,
-  initializeSplashScreen,
-} from "@/utils/splashScreenManager";
-import { ThemeProvider, useTheme } from "@providers/ThemeProvider";
-import ReactQueryProvider from "@providers/ReactQueryProvider";
-import { ThemedCustomText, ThemedButton } from "@components/themed";
-import { StackHeader } from "@components/navigation/StackHeader";
-import { MemoryDiagnosticsOverlay } from "../components/MemoryDiagnosticsOverlay";
-import { useBackHandler } from "../hooks/useBackHandler";
-import { Sentry, initializeSentry } from "@/config/sentry";
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Stack, type ErrorBoundaryProps, useRouter } from 'expo-router';i 
 import { Stack, type ErrorBoundaryProps, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +9,7 @@ import { hideSplashScreen, initializeSplashScreen } from '@utils/splashScreenMan
 import { ThemeProvider, useTheme } from '@providers/ThemeProvider';
 import ReactQueryProvider from '@providers/ReactQueryProvider';
 import { ToastProvider, useToast } from '@providers/ToastProvider';
+import { Web3Provider } from '@providers/Web3Provider';
 import { ThemedButton, ThemedCustomText } from '@components/themed';
 import { useFonts } from '@app/hooks/useFonts';
 import { useBackHandler } from '@hooks/useBackHandler';
@@ -40,7 +22,6 @@ import { useWalletStore } from '@store/useStore';
 initializeSplashScreen();
 initializeSentry();
 
-export const unstable_settings = { initialRouteName: "(tabs)" };
 export const unstable_settings = { initialRouteName: '(tabs)' };
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
@@ -52,15 +33,14 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     <SafeAreaProvider>
       <SafeAreaView
         style={styles.safeArea}
-        edges={["top", "right", "bottom", "left"]}
+        edges={['top', 'right', 'bottom', 'left']}
       >
         <View style={styles.errorContainer}>
-          <ThemedCustomText variant="h2" style={styles.centered}>
           <ThemedCustomText variant="h2" style={styles.errorTitle}>
             Something went wrong
           </ThemedCustomText>
           <ThemedCustomText variant="body" style={styles.centered}>
-            {error.message || "Unexpected navigation error."}
+            {error.message || 'Unexpected navigation error.'}
           </ThemedCustomText>
           <ThemedButton
             text="Try again"
@@ -79,9 +59,11 @@ export default function RootLayout() {
     <ReactQueryProvider>
       <ThemeProvider>
         <SafeAreaProvider>
-          <ToastProvider>
-            <RootLayoutNav />
-          </ToastProvider>
+          <Web3Provider>
+            <ToastProvider>
+              <RootLayoutNav />
+            </ToastProvider>
+          </Web3Provider>
         </SafeAreaProvider>
       </ThemeProvider>
     </ReactQueryProvider>
@@ -93,7 +75,6 @@ function RootLayoutNav() {
   const { showToast } = useToast();
   const { setNetwork } = useWalletStore();
   const { colors, isDark } = useTheme();
-  const [loaded, error] = useFonts({});
   const [fontsLoaded, fontError] = useFonts();
   const [onboardingResolved, setOnboardingResolved] = useState(false);
 
@@ -103,39 +84,6 @@ function RootLayoutNav() {
     }
   }, [fontsLoaded, fontError]);
 
-  useBackHandler(
-    useCallback(() => {
-      if (router.canGoBack()) {
-        router.back();
-        return true;
-      }
-      return false;
-    }, [router]),
-  );
-
-  if (!loaded && !error) return null;
-
-  return (
-    <SafeAreaProvider>
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: colors.background }]}
-        edges={["top", "right", "bottom", "left"]}
-      >
-        <StatusBar style={isDark ? "light" : "dark"} />
-        <Stack
-          screenOptions={{
-            header: (props) => <StackHeader {...(props as any)} />,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="hunt/[id]" options={{ title: "Hunt Details" }} />
-          <Stack.Screen name="details" options={{ title: "Details" }} />
-          <Stack.Screen name="nested" options={{ title: "Nested" }} />
-        </Stack>
-        <MemoryDiagnosticsOverlay />
-      </SafeAreaView>
-    </SafeAreaProvider>
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
 
@@ -243,16 +191,10 @@ function RootLayoutNav() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Screen name="hunt/[id]" options={{ title: 'Hunt Details', animation: 'none' }} />
+        <Stack.Screen name="network/switch" options={{ title: 'Switch Network', animation: 'none' }} />
         <Stack.Screen name="transaction/pending" options={{ title: 'Transaction Pending', animation: 'none' }} />
         <Stack.Screen name="details" options={{ title: 'Details', animation: 'none' }} />
         <Stack.Screen name="nested" options={{ title: 'Nested', animation: 'none' }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="hunt/[id]" options={{ title: 'Hunt Details' }} />
-        <Stack.Screen name="network/switch" options={{ title: 'Switch Network' }} />
-        <Stack.Screen name="transaction/pending" options={{ title: 'Transaction Pending' }} />
-        <Stack.Screen name="details" options={{ title: 'Details' }} />
-        <Stack.Screen name="nested" options={{ title: 'Nested' }} />
       </Stack>
       <MemoryDiagnosticsOverlay />
     </SafeAreaView>
@@ -263,10 +205,11 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   errorContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 16,
     paddingHorizontal: 24,
   },
-  centered: { textAlign: "center" },
+  errorTitle: { textAlign: 'center' },
+  centered: { textAlign: 'center' },
 });
