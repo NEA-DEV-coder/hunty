@@ -21,6 +21,8 @@ import { FeaturedHunts } from "@/components/FeaturedHunts"
 import { HuntCoverImage } from "@/components/HuntCoverImage"
 import { Footer } from "@/components/Footer"
 import { usePlayerCounts } from "@/hooks/usePlayerCounts"
+import { useRecentlyCompleted } from "@/hooks/useRecentlyCompleted"
+import { RecentlyCompletedSection } from "@/components/RecentlyCompletedSection"
 
 interface WalletOption {
   id: string
@@ -78,6 +80,9 @@ export default function GameArcade() {
   // useEffect below to ensure counts are fresh on each arcade page load.
   const allHuntIds = hunts.map((h) => String(h.id))
   const { counts: playerCounts, refetch: refetchPlayerCounts } = usePlayerCounts(allHuntIds)
+
+  // Derive recently completed hunts from the same list — no extra fetch.
+  const recentlyCompleted = useRecentlyCompleted(hunts)
 
   // Refresh player counts whenever the hunt list loads/changes.
   useEffect(() => {
@@ -315,6 +320,9 @@ export default function GameArcade() {
 
         {/* Featured Hunts Hero Section */}
         <FeaturedHunts />
+
+        {/* Recently Completed — derived from the same hunt list, no extra fetch */}
+        <RecentlyCompletedSection hunts={recentlyCompleted} />
 
         {/* Active Hunts Grid */}
         <div className="mt-10">
