@@ -6,6 +6,7 @@ import { getAllAchievementsWithStatus } from "@/lib/achievements/service"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { logger } from "@/lib/logger"
 
 interface BadgeWallProps {
   playerAddress: string
@@ -25,7 +26,7 @@ export function BadgeWall({ playerAddress }: BadgeWallProps) {
       const allAchievements = getAllAchievementsWithStatus(playerAddress)
       setAchievements(allAchievements)
     } catch (error) {
-      console.error("Failed to load achievements:", error)
+      logger.error("Failed to load achievements:", error)
     } finally {
       setLoading(false)
     }

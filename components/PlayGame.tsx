@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,7 +127,7 @@ export function PlayGame({
             creatorEmail: huntInfo.creatorEmail,
             completionTime: new Date().toLocaleString(),
           }),
-        }).catch((err) => console.error("Failed to send notification:", err));
+        }).catch((err) => logger.error("Failed to send notification:", err));
       }
       if (huntId) {
         localStorage.setItem(`hunt_completed_${huntId}`, "true");

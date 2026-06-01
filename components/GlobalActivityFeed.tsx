@@ -139,7 +139,7 @@ export function GlobalActivityFeed({
         setError("Unable to load activity feed.")
         // Keep stale events visible on error
       }
-      console.error("[GlobalActivityFeed] fetch error:", err)
+      logger.error("[GlobalActivityFeed] fetch error:", err)
     } finally {
       if (isMountedRef.current) {
         setLoading(false)

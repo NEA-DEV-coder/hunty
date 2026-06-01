@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { formatISOString } from "@/lib/dateUtils"
+import { logger } from "@/lib/logger"
 
 import { Header } from "@/components/Header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -158,7 +159,7 @@ export default function UserProfilePage() {
           setNftRewards(rewardsData)
         }
       } catch (err) {
-        console.error("Failed to load NFT rewards:", err)
+        logger.error("Failed to load NFT rewards:", err)
       }
     }
 

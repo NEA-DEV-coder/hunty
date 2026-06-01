@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { logger } from "@/lib/logger"
 
 const PINATA_JWT = process.env.PINATA_JWT
 
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (!pinataRes.ok) {
     const errText = await pinataRes.text()
-    console.error("Pinata upload error:", pinataRes.status, errText)
+    logger.error("Pinata upload error:", pinataRes.status, errText)
     return NextResponse.json({ error: "Failed to pin file to IPFS" }, { status: 502 })
   }
 

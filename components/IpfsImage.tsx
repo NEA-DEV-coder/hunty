@@ -1,5 +1,6 @@
 import Image, { ImageProps } from 'next/image';
 import React from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Custom loader that proxies IPFS or gateway URLs through an image optimization service.
@@ -30,7 +31,7 @@ export const IpfsImage: React.FC<ImageProps> = (props) => {
   const { src, width, quality, alt = "", ...rest } = props;
   // Ensure src is provided; Next.js Image requires it.
   if (!src) {
-    console.warn('IpfsImage: src prop is missing');
+    logger.warn('IpfsImage: src prop is missing');
     return null;
   }
   // width is required for the loader; if not provided, fall back to a default.

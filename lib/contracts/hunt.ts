@@ -5,6 +5,7 @@ import { normalizeNetworkError, AnswerIncorrectError } from "./errors"
 import { SOROBAN_RPC_URL, NETWORK_PASSPHRASE } from "./config"
 import { getActiveWalletAdapter } from "@/lib/walletAdapter"
 import { sha256Hex } from "@/lib/crypto"
+import { logger } from "@/lib/logger"
 
 import type { ClueInfo, HuntInfo, CreateHuntResult, SubmitAnswerResult, ActivateHuntResult, AddClueResult, ExtendHuntResult, LeaderboardEntry, FastestPlayerEntry } from "@/lib/types"
 
@@ -238,7 +239,7 @@ export async function get_hunt_leaderboard(huntId: number): Promise<LeaderboardE
         }
       }
     } catch (e) {
-      console.error("Failed to fetch leaderboard:", e)
+      logger.error("Failed to fetch leaderboard:", e)
     }
   }
 
@@ -298,7 +299,7 @@ export async function get_hunt_fastest_players(huntId: number): Promise<FastestP
         }
       }
     } catch (error) {
-      console.warn("Torii indexer fetch failed:", error)
+      logger.warn("Torii indexer fetch failed:", error)
     }
   }
 
@@ -481,7 +482,7 @@ export async function submitAnswer(
         localStorage.setItem(solvedKey, "true");
       }
     } catch (e) {
-      console.error("Failed to update local clue state in localStorage after answer submission:", e)
+      logger.error("Failed to update local clue state in localStorage after answer submission:", e)
     }
   }
 

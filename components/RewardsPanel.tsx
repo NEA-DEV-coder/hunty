@@ -6,6 +6,7 @@ import { Plus, Minus } from "lucide-react"
 import Trash from "@/components/icons/trash"
 import Coin from "@/components/icons/Coin"
 import { useState } from "react"
+import { logger } from "@/lib/logger"
 import { useXlmUsdPrice } from "@/hooks/useXlmUsdPrice"
 import type { Reward, RewardPlayerProgress } from "@/lib/types"
 import { claimReward } from "@/lib/contracts/rewardManager"
@@ -54,7 +55,7 @@ export function RewardsPanel({ rewards, onUpdateReward, onAddReward, onDeleteRew
       }
       setClaimed(true);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     } finally {
       setIsClaiming(false);
     }

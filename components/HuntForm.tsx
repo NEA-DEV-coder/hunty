@@ -73,7 +73,7 @@ export function HuntForm({ hunt, onUpdate, onRemove, huntId, onCluesSaved }: Hun
       const ipfsUri = await uploadToIPFS(file)
       onUpdate('image', ipfsUri)
     } catch (error) {
-      console.error('Error uploading image to IPFS:', error)
+      logger.error('Error uploading image to IPFS:', error)
       toast.error(error instanceof Error ? error.message : 'Image upload failed')
     } finally {
       setIsUploading(false)
@@ -134,7 +134,7 @@ export function HuntForm({ hunt, onUpdate, onRemove, huntId, onCluesSaved }: Hun
           updateClueAnswer(huntId, newId, hashed)
         } catch (e) {
           // non-fatal
-          console.warn("Failed to update local clue answer with hash", e)
+          logger.warn("Failed to update local clue answer with hash", e)
         }
       }
       onCluesSaved?.(valid.length)

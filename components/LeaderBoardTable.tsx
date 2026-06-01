@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { get_hunt_leaderboard } from "@/lib/contracts/hunt"
+import { logger } from "@/lib/logger"
 import Medal from "@/components/icons/Medal"
 import type { LeaderboardDisplayEntry } from "@/lib/types"
 
@@ -46,7 +47,7 @@ export function LeaderboardTable({ huntId, data: initialData, isLoading: initial
       setData(mappedData)
       setError(null)
     } catch (err) {
-      console.error("Failed to fetch leaderboard:", err)
+      logger.error("Failed to fetch leaderboard:", err)
       setError("Failed to load leaderboard data.")
     } finally {
       setIsLoading(false)

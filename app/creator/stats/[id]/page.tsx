@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/Header"
 import { getHuntById, updateHuntEndTime } from "@/lib/huntStore"
 import { extendEndTime } from "@/lib/contracts/hunt"
+import { logger } from "@/lib/logger"
 import { useWallet } from "@/lib/context/WalletContext"
 
 export default function CreatorStatsPage() {
@@ -70,7 +71,7 @@ export default function CreatorStatsPage() {
       
       alert(`Hunt end time extended successfully by ${hoursToAdd} hour(s)!`)
     } catch (error) {
-      console.error("Failed to extend end time:", error)
+      logger.error("Failed to extend end time:", error)
       alert("Failed to extend end time. Please try again.")
     } finally {
       setIsExtending(false)
