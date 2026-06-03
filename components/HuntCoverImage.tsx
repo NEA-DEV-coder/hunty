@@ -13,9 +13,14 @@ interface HuntCoverImageProps {
 export function HuntCoverImage({ src, alt, className }: HuntCoverImageProps) {
   const [gatewayIdx, setGatewayIdx] = useState(0)
 
+  // `fill` requires the container to be positioned. We always inject
+  // `relative` so callers don't have to remember to add it themselves,
+  // preventing layout shift when the image loads.
+  const containerClass = `relative ${className ?? ""}`.trim()
+
   if (!src) {
     return (
-      <div className={className}>
+      <div className={containerClass}>
         <Image
           src="/static-images/image1.png"
           alt={alt}
@@ -30,7 +35,7 @@ export function HuntCoverImage({ src, alt, className }: HuntCoverImageProps) {
   }
 
   return (
-    <div className={className}>
+    <div className={containerClass}>
       <Image
         src={resolveImageSrc(src, gatewayIdx)}
         alt={alt}
