@@ -100,6 +100,7 @@ export default function PlayScreen() {
       if (fromQr) {
         const qrCheck = await verifyQrAgainstClue(submittedAnswer, activeClue, currentProgress.hunt_id);
         if (!qrCheck.match) {
+          showToast({ message: qrCheck.reason, type: 'error' });
           setError(qrCheck.reason);
           return;
         }
@@ -137,16 +138,6 @@ export default function PlayScreen() {
   };
 
   const handleQrScan = async (data: string) => {
-    if (!activeClue || !currentProgress?.hunt_id) {
-      return;
-    }
-
-    const qrCheck = await verifyQrAgainstClue(data, activeClue, currentProgress.hunt_id);
-    if (!qrCheck.match) {
-      showToast({ message: qrCheck.reason, type: 'error' });
-      return;
-    }
-
     await submitClueAnswer(data, true);
   };
 
