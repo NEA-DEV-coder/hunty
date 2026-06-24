@@ -191,6 +191,7 @@ export interface RewardPlayerProgress {
   is_completed: boolean
   reward_claimed: boolean
   hunt_id?: number | string
+  reward_amount?: number
 }
 
 export type RewardReceiptType = "deposit" | "distribution" | "claim" | "refund"

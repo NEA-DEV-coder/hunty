@@ -19,56 +19,24 @@ export type ClaimRewardResult = {
   receipt: RewardReceipt
 }
 
-export type RewardEscrow = {
-  huntId: number
-  creator: string
-  rewardType: "XLM" | "NFT" | "Both"
-  totalPool: number
-  balance: number
-  rewards: Reward[]
-  expiresAt: number
-  depositTxHash: string
-  createdAt: number
-  distributions: RewardReceipt[]
-  refunds: RewardReceipt[]
-}
+const CLAIM_TIMEOUT_MS = 120_000
+const MAX_RETRIES = 2
 
-const ESCROW_KEY = "hunty_reward_escrows"
-
-function readEscrows(): RewardEscrow[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw = localStorage.getItem(ESCROW_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as RewardEscrow[]
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
+export class ClaimTimeoutError extends Error {
+  constructor() {
+    super("Reward claim timed out. Please try again.")
+    this.name = "ClaimTimeoutError"
   }
 }
 
-function writeEscrows(escrows: RewardEscrow[]): void {
-  if (typeof window === "undefined") return
-  localStorage.setItem(ESCROW_KEY, JSON.stringify(escrows))
-}
-
-function receiptId(type: RewardReceipt["type"], huntId: number): string {
-  return `${type}_${huntId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-}
-
-function saveEscrow(next: RewardEscrow): void {
-  const escrows = readEscrows()
-  const existingIndex = escrows.findIndex((escrow) => escrow.huntId === next.huntId)
-  if (existingIndex >= 0) {
-    escrows[existingIndex] = next
-  } else {
-    escrows.push(next)
+export class ClaimRejectedError extends Error {
+  constructor() {
+    super("Transaction was rejected in your wallet.")
+    this.name = "ClaimRejectedError"
   }
-  writeEscrows(escrows)
-  updateHuntRewardEscrow(next.huntId, next.balance, next.depositTxHash)
 }
 
-async function submitRewardReceipt(action: string, payload: Record<string, unknown>): Promise<string> {
+async function claimRewardInternal(huntId: number, signal?: AbortSignal): Promise<ClaimRewardResult> {
   if (typeof window === "undefined") throw new Error("Browser environment required")
 
   const rewardManagerAddress = getRequiredRewardManagerAddress()
@@ -95,96 +63,23 @@ async function submitRewardReceipt(action: string, payload: Record<string, unkno
     .build()
 
   const signedXdr = await wallet.signTransaction(tx.toXDR())
-  const result = await server.submitTransaction(signedXdr)
-  if (!result?.hash) throw new Error("Reward transaction failed")
-  return result.hash
-}
 
-export function getRewardEscrow(huntId: number): RewardEscrow | null {
-  return readEscrows().find((escrow) => escrow.huntId === huntId) ?? null
-}
+  if (signal?.aborted) throw new ClaimTimeoutError()
 
-export function getRewardHistory(huntId: number): RewardReceipt[] {
-  const escrow = getRewardEscrow(huntId)
-  if (!escrow) return []
-  return [
-    {
-      id: `deposit_${huntId}`,
-      huntId,
-      type: "deposit",
-      txHash: escrow.depositTxHash,
-      amount: escrow.totalPool,
-      from: escrow.creator,
-      createdAt: escrow.createdAt,
-    },
-    ...escrow.distributions,
-    ...escrow.refunds,
-  ].sort((a, b) => b.createdAt - a.createdAt)
-}
-
-export async function createRewardEscrow(input: {
-  huntId: number
-  creator?: string
-  rewardType: "XLM" | "NFT" | "Both"
-  rewards: Reward[]
-  expiresAt: number
-}): Promise<RewardEscrow | null> {
-  if (input.rewardType === "NFT") return null
-
-  const totalPool = input.rewards.reduce((sum, reward) => sum + reward.amount, 0)
-  if (totalPool <= 0) throw new Error("Reward pool must be greater than 0")
-
-  const txHash = await submitRewardReceipt("deposit_reward_pool", {
-    huntId: input.huntId,
-    creator: input.creator,
-    totalPool,
-    rewards: input.rewards.map(({ place, amount }) => ({ place, amount })),
-    expiresAt: input.expiresAt,
+  const submitPromise = server.submitTransaction(signedXdr)
+  const timeout = new Promise<never>((_, reject) => {
+    const timer = setTimeout(() => reject(new ClaimTimeoutError()), CLAIM_TIMEOUT_MS)
+    signal?.addEventListener("abort", () => {
+      clearTimeout(timer)
+      reject(new ClaimTimeoutError())
+    })
   })
 
-  const wallet = getActiveWalletAdapter()
-  const creator = input.creator || (await wallet.getPublicKey())
-  const escrow: RewardEscrow = {
-    huntId: input.huntId,
-    creator,
-    rewardType: input.rewardType,
-    totalPool,
-    balance: totalPool,
-    rewards: input.rewards,
-    expiresAt: input.expiresAt,
-    depositTxHash: txHash,
-    createdAt: Date.now(),
-    distributions: [],
-    refunds: [],
-  }
-  saveEscrow(escrow)
-  return escrow
-}
+  const result = await Promise.race([submitPromise, timeout])
+  if (!result?.hash) throw new Error("Reward claim transaction failed")
 
-function getRewardForRank(escrow: RewardEscrow, rank: number): number {
-  const explicit = escrow.rewards.find((reward) => reward.place === rank)
-  if (explicit) return Math.min(explicit.amount, escrow.balance)
-
-  const remainingSlots = Math.max(escrow.rewards.length - escrow.distributions.length, 1)
-  return Math.floor((escrow.balance / remainingSlots) * 10_000_000) / 10_000_000
-}
-
-export async function distributeCompletionReward(
-  huntId: number,
-  playerAddress?: string
-): Promise<ClaimRewardResult | null> {
-  const hunt = getHunt(String(huntId))
-  if (hunt?.rewardType === "NFT") return null
-
-  const escrow = getRewardEscrow(huntId)
-  if (!escrow || escrow.balance <= 0) return null
-
-  const wallet = getActiveWalletAdapter()
-  const recipient = playerAddress || (await wallet.getPublicKey())
-
-  const existing = escrow.distributions.find((receipt) => receipt.to === recipient)
-  if (existing) {
-    return { txHash: existing.txHash, amount: existing.amount, receipt: existing }
+  if (typeof window !== "undefined") {
+    localStorage.setItem(`hunt_reward_claimed_${huntId}`, "true")
   }
 
   const rank = escrow.distributions.length + 1
@@ -272,4 +167,42 @@ export async function refundUnclaimedRewards(huntId: number): Promise<RewardRece
   })
 
   return receipt
+}
+
+export async function claimReward(huntId: number, options?: { signal?: AbortSignal, onStage?: (stage: string) => void }): Promise<ClaimRewardResult> {
+  const { signal, onStage } = options ?? {}
+
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        onStage?.("retrying")
+      }
+      return await claimRewardInternal(huntId, signal)
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+
+      if (signal?.aborted) throw lastError
+
+      const isRejection =
+        String(lastError.message).toLowerCase().includes("reject") ||
+        String(lastError.message).toLowerCase().includes("cancel") ||
+        String(lastError.message).toLowerCase().includes("denied")
+
+      if (isRejection) {
+        throw new ClaimRejectedError()
+      }
+
+      const isTimeout = lastError instanceof ClaimTimeoutError
+
+      if (isTimeout && attempt < MAX_RETRIES) {
+        continue
+      }
+
+      throw lastError
+    }
+  }
+
+  throw lastError ?? new Error("Reward claim failed")
 }

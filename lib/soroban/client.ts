@@ -34,6 +34,8 @@ export const DEFAULT_RPC_URL = TESTNET_CONFIG.rpcUrl;
  */
 export const DEFAULT_NETWORK_PASSPHRASE = TESTNET_CONFIG.networkPassphrase;
 
+export const MAINNET_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015";
+
 /**
  * Retrieves the RPC URL from environment or uses the default.
  */
