@@ -31,7 +31,7 @@ describe("LeaderboardTable", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(get_hunt_leaderboard as any).mockResolvedValue(mockLeaderboardData)
+    ;(get_hunt_leaderboard as unknown as { mockResolvedValue: (v: unknown) => void }).mockResolvedValue(mockLeaderboardData)
   })
 
   it("renders loading skeleton when isLoading is true and data is empty", () => {
@@ -206,7 +206,7 @@ describe("LeaderboardTable", () => {
     ]
 
     const renderSpy = vi.fn()
-    const TestWrapper = (props: any) => {
+    const TestWrapper = (props: React.ComponentProps<typeof LeaderboardTable>) => {
       renderSpy()
       return <LeaderboardTable {...props} />
     }

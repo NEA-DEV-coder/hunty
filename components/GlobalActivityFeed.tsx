@@ -10,6 +10,7 @@ import {
   anonymizeAddress,
   getRecentActivity,
 } from "@/lib/contracts/activityFeed"
+import { logger } from "@/lib/logger"
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -9,6 +9,7 @@ import { useWallet } from "@/lib/context/WalletContext";
 import { WalletBottomSheet } from "./WalletBottomSheet";
 import { Copy, LogOut, Check } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSelector } from "./LanguageSelector";
 
 export function Header({ balance = "0" }: { balance?: string }) {
   const mounted = useIsMounted();
@@ -54,7 +55,10 @@ export function Header({ balance = "0" }: { balance?: string }) {
           Hunty
         </div>
 
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <LanguageSelector />
+          <ThemeToggle />
+        </div>
 
         {mounted && connected ? (
           <div className="flex flex-row items-center gap-2 sm:gap-4 min-w-0 w-full sm:w-auto flex-1 justify-between sm:justify-end">

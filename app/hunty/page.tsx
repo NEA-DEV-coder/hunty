@@ -2,7 +2,7 @@
 
 import { logger } from "@/lib/logger"
 import { Suspense, useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion, type Easing } from "framer-motion"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
@@ -71,7 +71,7 @@ function CreateGameContent() {
     initial: prefersReducedMotion ? false : { x: direction > 0 ? 50 : -50, opacity: 0 },
     animate: prefersReducedMotion ? {} : { x: 0, opacity: 1 },
     exit: prefersReducedMotion ? {} : { x: direction > 0 ? -50 : 50, opacity: 0 },
-    transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeInOut" },
+    transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeInOut" as Easing },
   }
 
   const tabToIndex = { create: 0, rewards: 1, publish: 2, leaderboard: 3 }
