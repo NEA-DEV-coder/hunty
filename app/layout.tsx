@@ -86,7 +86,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Hunty" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
-        {/* Splash screen for various device sizes */}
+        {/* Splash screen for various iPhone sizes */}
         <meta name="msapplication-TileColor" content="#7c3aed" />
         <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
       </head>
