@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next"
+import { Suspense } from "react"
 
 import "./globals.css"
 import { hankenGrotesk } from "@/lib/font"
 import { TxToaster } from "@/components/TxToaster"
-import { EnvironmentIndicator } from "@/components/EnvironmentIndicator"
+import { PageSkeleton } from "@/components/PageSkeleton"
+import { PageTransitionWrapper } from "@/components/PageTransitionWrapper"
 import Providers from "./providers"
 import PWAInstallPrompt from "@/components/PWAInstallPrompt"
 
